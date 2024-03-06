@@ -18,9 +18,9 @@ impl NumBits for u8 {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct Bits<const N: u8>;
+pub struct Fixed<const N: u8>;
 
-impl<const N: u8> NumBits for Bits<N> {
+impl<const N: u8> NumBits for Fixed<N> {
     fn num_bits(&self) -> u8 {
         N
     }

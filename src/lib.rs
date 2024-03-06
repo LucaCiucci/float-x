@@ -14,6 +14,16 @@ pub struct FloatX<M: NumBits, Impl: RoundoffImpl<M>> {
 }
 
 impl<M: NumBits, Impl: RoundoffImpl<M>> FloatX<M, Impl> {
+    /// Rounds off the given float to the given number of mantissa digits
+    pub fn new(repr: f64, mantissa_len: M, roundoff_impl: Impl) -> Self {
+        debug_assert!(mantissa_len.num_bits() <= REPR_MANTISSA_LEN);
+        Self {
+            repr: roundoff_impl.round(repr, &mantissa_len),
+            mantissa_len,
+            roundoff_impl,
+        }
+    }
+
     pub fn mantissa_raw_len(&self) -> &M {
         &self.mantissa_len
     }
@@ -22,45 +32,18 @@ impl<M: NumBits, Impl: RoundoffImpl<M>> FloatX<M, Impl> {
         self.mantissa_len.num_bits()
     }
 
-    /// Number of bits to cut off the mantissa
-    fn cut_len(&self) -> u8 {
-        REPR_MANTISSA_LEN - self.mantissa_len.num_bits()
-    }
-
-    /// Mask to cut off the mantissa
-    ///
-    /// As an example, if the mantissa has length 44 (52 - 8), the mask will be
-    /// `0x00000000000000ff` because the last 8 bits cut off the mantissa.
-    fn cut_mask(&self) -> u64 {
-        (1u64 << self.cut_len()) - 1
-    }
-
-    /// Mask to keep
-    ///
-    /// This is just the bitwise negation of the [cut mask](Self::cut_mask).
-    fn keep_mask(&self) -> u64 {
-        !self.cut_mask()
-    }
-
-    pub fn new(repr: f64, mantissa_len: M, roundoff_impl: Impl) -> Self {
-        let mut f = Self { repr, mantissa_len, roundoff_impl };
-        debug_assert!(f.mantissa_len() <= REPR_MANTISSA_LEN);
-        f.repr = like_f64(like_u64(f.repr) & f.keep_mask());
-        f
-    }
-
     pub fn mantissa_raw(&self) -> u64 {
-        like_u64(self.repr) & !self.cut_mask()
+        like_u64(self.repr) & !cut_mask(cut_len(self.mantissa_len()))
     }
 
     pub fn mantissa_shifted(&self) -> u64 {
-        self.mantissa_raw() >> self.cut_len()
+        self.mantissa_raw() >> cut_len(self.mantissa_len())
     }
 
     pub fn set_mantissa_shifted(&mut self, mantissa: u64) {
-        assert!(mantissa & !self.keep_mask() == 0, "Mantissa too large");
-        let mantissa = mantissa << self.cut_len();
-        self.repr = like_f64((like_u64(self.repr)) | (mantissa & self.keep_mask()));
+        assert!(mantissa & !keep_mask(cut_len(self.mantissa_len())) == 0, "Mantissa too large");
+        let mantissa = mantissa << cut_len(self.mantissa_len());
+        self.repr = like_f64((like_u64(self.repr)) | (mantissa & keep_mask(cut_len(self.mantissa_len()))));
     }
 
     pub fn set_mantissa_propagated(&mut self, _mantissa: u64) {
