@@ -5,9 +5,9 @@ use super::*;
 ///
 /// This is the simplest form of roundoff.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Cut;
+pub struct Truncate;
 
-impl<M: NumBits> RoundoffImpl<M> for Cut {
+impl<M: NumBits> RoundoffImpl<M> for Truncate {
     fn round(&self, f: f64, mantissa_len: &M) -> f64 {
         drop_off(f, cut_len(mantissa_len.num_bits()))
     }

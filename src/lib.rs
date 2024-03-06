@@ -24,6 +24,10 @@ impl<M: NumBits, Impl: RoundoffImpl<M>> FloatX<M, Impl> {
         }
     }
 
+    pub fn repr(&self) -> f64 {
+        self.repr
+    }
+
     pub fn mantissa_raw_len(&self) -> &M {
         &self.mantissa_len
     }
