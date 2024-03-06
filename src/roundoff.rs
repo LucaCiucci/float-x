@@ -24,3 +24,4 @@ pub trait RoundoffImpl<M: NumBits>: Clone {
 
 mod cut; pub use cut::Cut;
 mod guard_digit; pub use guard_digit::GuardDigit;
+mod random_noise; pub use random_noise::RandomNoise;
