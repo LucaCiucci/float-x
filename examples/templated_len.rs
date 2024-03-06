@@ -10,7 +10,7 @@ fn main() {
     );
 
     let pi2 = pi * pi;
-    println!("pi^2 (10 bits mantissa): {pi2:.18}");
+    println!("pi^2 (10 bits mantissa): {pi2:21.18}");
 
-    println!("pi^2 (f64)             : {:.18}", pi_f64 * pi_f64);
+    println!("pi^2 (f64)             : {:21.18}", pi_f64 * pi_f64);
 }
