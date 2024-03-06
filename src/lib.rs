@@ -6,6 +6,27 @@ pub mod utils; use utils::*;
 mod ops;
 
 /// Float with settable number of mantissa digits
+///
+/// # Examples
+/// ```
+/// # use float_x::*;
+/// let x: f64 = 1.0 + 0.5 + 0.25 + 0.125 + 0.0625;
+/// let x_cut = 1.0 + 0.5 + 0.25 + 0.125;
+/// 
+/// let x_1 = FloatX::new(
+///     x,
+///     3, // 3 bits mantissa, determined at runtime
+///     roundoff::GuardDigit, // guard digit roundoff
+/// );
+/// let x_2 = FloatX::new(
+///     x,
+///     Fixed::<3>, // 3 bits mantissa, determined at compile time
+///     roundoff::Truncate, // truncate roundoff
+/// );
+///
+/// assert_eq!(x_1.repr(), 2.0);
+/// assert_eq!(x_2.repr(), x_cut);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct FloatX<M: NumBits, Impl: RoundoffImpl<M>> {
     repr: f64, // TODO use a trait to allow other types
