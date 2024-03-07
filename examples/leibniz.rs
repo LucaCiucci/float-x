@@ -27,7 +27,6 @@ fn main() {
     for mantissa_len in 0..=52 {
         let pi = leibniz_pi(n, |f| FloatX::new(f as _, mantissa_len, roundoff::GuardDigit));
         pi_fx.push(pi.repr());
-        println!("{}: {:.16}", mantissa_len, pi.repr());
         let pi = leibniz_pi(n, |f| FloatX::new(f as _, mantissa_len, roundoff::Truncate));
         pi_fx_cut.push(pi.repr());
         let r = 20;
@@ -38,7 +37,6 @@ fn main() {
         let mean = p.iter().sum::<f64>() / r as f64;
         let var = p.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (r - 1) as f64;
         pi_fx_noise.push((mean, var.sqrt()));
-        println!("{} - trunc: {:.16}", mantissa_len, pi.repr());
         plot(&pi_fx, &pi_fx_cut, &pi_fx_noise);
     }
 }
