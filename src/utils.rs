@@ -58,3 +58,17 @@ pub fn cut_mask(cut_len: u8) -> u64 {
 pub fn keep_mask(cut_len: u8) -> u64 {
     !cut_mask(cut_len)
 }
+
+pub fn mantissa_raw(repr: f64, cut_len: u8) -> u64 {
+    like_u64(repr) & !cut_mask(cut_len)
+}
+
+pub fn mantissa_shifted(repr: f64, cut_len: u8) -> u64 {
+    raw_mantissa_from_f64(repr) >> cut_len
+}
+
+pub fn set_mantissa_shifted(repr: &mut f64, cut_len: u8, mantissa: u64) {
+    // TODO assert!(mantissa & !keep_mask(cut_len) == 0, "Mantissa too large {:#x} {} {}", mantissa, cut_len, 52 - cut_len);
+    let mantissa = mantissa << cut_len;
+    *repr = like_f64((like_u64(*repr)) | (mantissa & keep_mask(cut_len)));
+}

@@ -1,6 +1,7 @@
 use std::{io::Write, ops::{AddAssign, Div, Mul}};
 
 use float_x::{roundoff, FloatX};
+use plotters::style::full_palette::GREEN_600;
 
 
 
@@ -22,14 +23,23 @@ fn main() {
 
     let mut pi_fx = Vec::new();
     let mut pi_fx_cut = Vec::new();
+    let mut pi_fx_noise = Vec::new();
     for mantissa_len in 0..=52 {
         let pi = leibniz_pi(n, |f| FloatX::new(f as _, mantissa_len, roundoff::GuardDigit));
         pi_fx.push(pi.repr());
         println!("{}: {:.16}", mantissa_len, pi.repr());
         let pi = leibniz_pi(n, |f| FloatX::new(f as _, mantissa_len, roundoff::Truncate));
         pi_fx_cut.push(pi.repr());
+        let r = 20;
+        let mut p = Vec::new();
+        for _ in 0..r {
+            p.push(leibniz_pi(n, |f| FloatX::new(f as _, mantissa_len, roundoff::RandomNoise)).repr());
+        }
+        let mean = p.iter().sum::<f64>() / r as f64;
+        let var = p.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (r - 1) as f64;
+        pi_fx_noise.push((mean, var.sqrt()));
         println!("{} - trunc: {:.16}", mantissa_len, pi.repr());
-        plot(&pi_fx, &pi_fx_cut);
+        plot(&pi_fx, &pi_fx_cut, &pi_fx_noise);
     }
 }
 
@@ -49,7 +59,7 @@ where
     pi * f(4)
 }
 
-fn plot(pi_fx: &[f64], pi_fx_cut: &[f64]) {
+fn plot(pi_fx: &[f64], pi_fx_cut: &[f64], pi_fx_noise: &[(f64, f64)]) {
     use plotters::prelude::*;
     let root = SVGBackend::new("examples/leibniz/comparison.svg", (480, 320)).into_drawing_area();
 
@@ -61,6 +71,10 @@ fn plot(pi_fx: &[f64], pi_fx_cut: &[f64]) {
 
     let diffs_cut = pi_fx_cut.iter()
         .map(|p| (p - std::f64::consts::PI).abs())
+        .collect::<Vec<_>>();
+
+    let diffs_noise = pi_fx_noise.iter()
+        .map(|(mean, _)| (mean - std::f64::consts::PI).abs())
         .collect::<Vec<_>>();
 
     let (min, max) = diffs
@@ -88,6 +102,29 @@ fn plot(pi_fx: &[f64], pi_fx_cut: &[f64]) {
         .unwrap();
 
     chart
+        .draw_series(LineSeries::new(
+            (0..=52).map(|d| d as f64).zip(diffs_noise.iter().cloned()),
+            GREEN.stroke_width(2),
+        ))
+        .unwrap()
+        .label("Random noise (2 LSBs)")
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], GREEN_600.stroke_width(2)));
+
+        chart
+        .draw_series(diffs_noise.iter().zip(pi_fx_noise.iter()).enumerate()
+            .map(|(b, (diff, (_, var)))| {
+                ErrorBar::new_vertical(
+                    b as f64,
+                    diff - var.sqrt(),
+                    *diff,
+                    diff + var.sqrt(),
+                    GREEN_600,
+                    5,
+                )
+            }),)
+        .unwrap();
+
+        chart
         .draw_series(LineSeries::new(
             (0..=52).map(|d| d as f64).zip(diffs.iter().cloned()),
             RED.stroke_width(2),

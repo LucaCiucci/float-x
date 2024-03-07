@@ -58,17 +58,16 @@ impl<M: NumBits, Impl: RoundoffImpl<M>> FloatX<M, Impl> {
     }
 
     pub fn mantissa_raw(&self) -> u64 {
-        like_u64(self.repr) & !cut_mask(cut_len(self.mantissa_len()))
+        mantissa_raw(self.repr, cut_len(self.mantissa_len()))
     }
 
     pub fn mantissa_shifted(&self) -> u64 {
-        self.mantissa_raw() >> cut_len(self.mantissa_len())
+        mantissa_shifted(self.repr, cut_len(self.mantissa_len()))
     }
 
     pub fn set_mantissa_shifted(&mut self, mantissa: u64) {
-        assert!(mantissa & !keep_mask(cut_len(self.mantissa_len())) == 0, "Mantissa too large");
-        let mantissa = mantissa << cut_len(self.mantissa_len());
-        self.repr = like_f64((like_u64(self.repr)) | (mantissa & keep_mask(cut_len(self.mantissa_len()))));
+        let cut_len = cut_len(self.mantissa_len());
+        set_mantissa_shifted(&mut self.repr, cut_len, mantissa)
     }
 
     pub fn set_mantissa_propagated(&mut self, _mantissa: u64) {
