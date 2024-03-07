@@ -20,7 +20,7 @@ fn main() {
             roundoff::GuardDigit,
         );
         let pi2 = pi * pi;
-        println!("pi^2 ({mantissa_len:02} bits mantissa, {} precision): {pi2:21.18}", precision_name(mantissa_len));
+        println!("pi^2 ({mantissa_len:02} bits mantissa, {name} precision): {pi2:21.18}", name=precision_name(mantissa_len));
     }
 
     println!("pi^2 (f64)                             : {:21.18}", pi_f64 * pi_f64);
